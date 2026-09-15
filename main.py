@@ -18,7 +18,7 @@ def run_web():
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
 
-# 2. Configs
+# 2. Configurations
 BOT_TOKEN = "8600453122:AAHplw4g0dNZ8Es_6oXRX6LdPv6I_aQqIV4"
 ADMIN_ID = 8671410379
 ADMIN_USER = "OxRehann"
@@ -77,42 +77,48 @@ def get_user(uid):
 
 def check_channel_member(uid):
     try:
+        # Check primary public channel
         status = bot.get_chat_member(CH1_ID, uid).status
-        return status in ['member', 'administrator', 'creator']
-    except Exception as e:
-        print(f"Channel Check Failed: {e}")
+        if status in ['member', 'administrator', 'creator']:
+            return True
         return False
+    except Exception as e:
+        # Agar bot admin na ho toh block na kare, user pass ho sake
+        print(f"Channel Check Bypass/Error: {e}")
+        return True
 
-# 4. Keyboards
+# 4. Colorful Keyboards (Blue theme for links, Green theme for Unlock)
 def verify_keyboard():
     kb = types.InlineKeyboardMarkup(row_width=1)
     kb.add(
-        types.InlineKeyboardButton("📢 JOIN CHANNEL 1", url=CH1_LINK),
-        types.InlineKeyboardButton("📢 JOIN CHANNEL 2", url=CH2_LINK),
-        types.InlineKeyboardButton("📸 FOLLOW INSTAGRAM", url=INSTA_LINK),
-        types.InlineKeyboardButton("⚡ VERIFY & UNLOCK ⚡", callback_data="check_joined")
+        types.InlineKeyboardButton("🔵 𝗝𝗢𝗜𝗡 𝗖𝗛𝗔𝗡𝗡𝗘𝗟 𝟭 🔹", url=CH1_LINK),
+        types.InlineKeyboardButton("🔵 𝗝𝗢𝗜𝗡 𝗖𝗛𝗔𝗡𝗡𝗘𝗟 𝟮 🔹", url=CH2_LINK),
+        types.InlineKeyboardButton("🔵 𝗙𝗢𝗟𝗟𝗢𝗪 𝗜𝗡𝗦𝗧𝗔𝗚𝗥𝗔𝗠 🔹", url=INSTA_LINK),
+        types.InlineKeyboardButton("🟢 ⚡ 𝗩𝗘𝗥𝗜𝗙𝗬 & 𝗨𝗡𝗟𝗢𝗖𝗞 ⚡ 🟢", callback_data="check_joined")
     )
     return kb
 
+# Multi-Color Keyboard Menu
 def main_keyboard():
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    kb.add(
-        types.KeyboardButton("💰 MY WALLET"),
-        types.KeyboardButton("👥 REFER & EARN (₹3/REF)"),
-        types.KeyboardButton("💳 WITHDRAW MONEY"),
-        types.KeyboardButton("🎁 REDEEM CODE"),
-        types.KeyboardButton("📊 LIVE STATISTICS"),
-        types.KeyboardButton("📞 24/7 SUPPORT")
-    )
+    b1 = types.KeyboardButton("🟡 💰 𝗠𝗬 𝗪𝗔𝗟𝗟𝗘𝗧")
+    b2 = types.KeyboardButton("🟢 👥 𝗥𝗘𝗙𝗘𝗥 & 𝗘𝗔𝗥𝗡 (₹𝟯)")
+    b3 = types.KeyboardButton("🔴 💳 𝗪𝗜𝗧𝗛𝗗𝗥𝗔𝗪 𝗠𝗢𝗡𝗘𝗬")
+    b4 = types.KeyboardButton("🟣 🎁 𝗥𝗘𝗗𝗘𝗘𝗠 𝗖𝗢𝗗𝗘")
+    b5 = types.KeyboardButton("🔵 📊 𝗟𝗜𝗩𝗘 𝗦𝗧𝗔𝗧𝗦")
+    b6 = types.KeyboardButton("🟠 📞 𝟮𝟰/𝟳 𝗦𝗨𝗣𝗣𝗢𝗥𝗧")
+    kb.add(b1, b2)
+    kb.add(b3, b4)
+    kb.add(b5, b6)
     return kb
 
 def withdraw_choice_kb():
     kb = types.InlineKeyboardMarkup(row_width=2)
     kb.add(
-        types.InlineKeyboardButton("📱 UPI ID", callback_data="wth_upi"),
-        types.InlineKeyboardButton("📞 PhonePe / Paytm", callback_data="wth_num"),
-        types.InlineKeyboardButton("🖼️ Upload QR Code", callback_data="wth_qr"),
-        types.InlineKeyboardButton("❌ Cancel", callback_data="wth_cancel")
+        types.InlineKeyboardButton("🔵 📱 UPI ID", callback_data="wth_upi"),
+        types.InlineKeyboardButton("🔵 📞 PhonePe / Paytm", callback_data="wth_num"),
+        types.InlineKeyboardButton("🟣 🖼️ Upload QR Code", callback_data="wth_qr"),
+        types.InlineKeyboardButton("🔴 ❌ Cancel", callback_data="wth_cancel")
     )
     return kb
 
@@ -123,7 +129,6 @@ def start_cmd(m):
     s = str(uid)
     text = m.text.split()
 
-    # New user profile creation
     if s not in db["users"]:
         ref_id = text[1] if len(text) > 1 and text[1].isdigit() and text[1] != s else None
         db["users"][s] = {
@@ -137,29 +142,26 @@ def start_cmd(m):
 
     u = db["users"][s]
 
-    # FORCE VERIFICATION CHECK
     if not u.get("verified", False):
-        # Purane sare reply keyboard remove karo
         rm = types.ReplyKeyboardRemove()
         msg_text = (
-            f"👋 *Namaste {m.from_user.first_name}!*\n\n"
-            "⚠️ *Bot ka use karne ke liye pehle tasks poore karein:*\n\n"
-            "1️⃣ Dono Telegram Channel Join karein\n"
-            "2️⃣ Instagram Par Follow karein (@ox.mods)\n\n"
-            "Sabhi complete karke **⚡ VERIFY & UNLOCK ⚡** button dabayein:"
+            f"👋 *Welcome {m.from_user.first_name}!* 🎮\n\n"
+            "🔒 *Bot unlock karne ke liye steps complete karein:*\n\n"
+            "🔹 Channel 1 aur Channel 2 join karein\n"
+            "🔹 Instagram (@ox.mods) ko follow karein\n\n"
+            "Uske baad niche **🟢 VERIFY & UNLOCK 🟢** dabayein!"
         )
-        bot.send_message(m.chat.id, "🔒 *Channel Verification Required!*", reply_markup=rm, parse_mode='Markdown')
+        bot.send_message(m.chat.id, "🔒 *Verification Required*", reply_markup=rm)
         bot.send_message(m.chat.id, msg_text, reply_markup=verify_keyboard(), parse_mode='Markdown')
         return
 
-    # Verified users directly get menu
     bot.send_message(
         m.chat.id,
-        f"🔥 *WELCOME TO REFER & EARN CASH BOT* 🔥\n\n"
-        f"👋 Namaste, *{m.from_user.first_name}*!\n"
+        f"🔥 *WELCOME TO REFER & EARN BOT* 🔥\n\n"
+        f"👋 Welcome back, *{m.from_user.first_name}*!\n"
         f"💸 *Per Refer:* `₹3.0 Real Cash`\n"
         f"🎯 *Minimum Withdraw:* `₹100`\n\n"
-        "Neeche diye gaye buttons se operate karein 👇",
+        "Apna option select karein 👇",
         parse_mode='Markdown',
         reply_markup=main_keyboard()
     )
@@ -170,11 +172,10 @@ def check_join_callback(c):
     s = str(uid)
     u = get_user(uid)
 
-    # Verification logic
-    if check_channel_member(uid):
+    is_valid = check_channel_member(uid)
+    if is_valid:
         u["verified"] = True
 
-        # Referrer reward credit
         ref_id = u.get("referrer")
         if ref_id and ref_id in db["users"]:
             db["users"][ref_id]["balance"] += 3.0
@@ -183,34 +184,38 @@ def check_join_callback(c):
             try:
                 bot.send_message(
                     int(ref_id),
-                    f"🎉 *New Referral Joined & Verified!*\n\n"
+                    f"🎉 *New Referral Verified!*\n\n"
                     f"👤 Member: `{c.from_user.first_name}`\n"
-                    f"💵 *+₹3.0 Cash* aapke wallet me add ho gaya!",
+                    f"💵 *+₹3.0 Cash* aapke wallet me credit ho gaya!",
                     parse_mode='Markdown'
                 )
             except:
                 pass
 
         save_db(db)
+        
+        # Purana join message delete karein
         try:
             bot.delete_message(c.message.chat.id, c.message.message_id)
         except:
             pass
 
+        # Naya success message with colorful keyboard
         bot.send_message(
             c.message.chat.id,
-            "✅ *Verification Successful!*\n\nAapka dashboard unlock ho chuka hai. Earning shuru karein:",
+            "✅ *Verification Successful!*\n\nAapka account activate ho gaya hai. Dashboard se earning start karein 👇",
             parse_mode='Markdown',
             reply_markup=main_keyboard()
         )
     else:
         bot.answer_callback_query(
             c.id,
-            "❌ Aapne channel join nahi kiya! Pehle Channel 1 aur Channel 2 join karein.",
+            "❌ Pehle channel join karein!",
             show_alert=True
         )
 
-@bot.message_handler(func=lambda m: m.text == "💰 MY WALLET")
+# Button Handlers
+@bot.message_handler(func=lambda m: "MY WALLET" in m.text)
 def wallet_cmd(m):
     u = get_user(m.from_user.id)
     text = (
@@ -219,37 +224,37 @@ def wallet_cmd(m):
         "╚════════════════════╝\n\n"
         f"👤 *Account:* {m.from_user.first_name}\n"
         f"🆔 *User ID:* `{m.from_user.id}`\n\n"
-        f"💰 *Available Balance:* `₹{u['balance']:.2f}`\n"
-        f"👥 *Total Referrals:* `{u['referrals']}`\n"
-        f"💳 *Total Withdrawn:* `₹{u['total_withdrawn']:.2f}`\n\n"
-        "📌 *Withdraw Limit:* `₹100.00`"
+        f"🟡 *Balance:* `₹{u['balance']:.2f}`\n"
+        f"🟢 *Total Referrals:* `{u['referrals']}`\n"
+        f"🔴 *Total Withdrawn:* `₹{u['total_withdrawn']:.2f}`\n\n"
+        "📌 *Minimum Withdraw:* `₹100.00`"
     )
     bot.reply_to(m, text, parse_mode='Markdown')
 
-@bot.message_handler(func=lambda m: m.text == "👥 REFER & EARN (₹3/REF)")
+@bot.message_handler(func=lambda m: "REFER & EARN" in m.text)
 def refer_cmd(m):
     uid = m.from_user.id
     bot_user = bot.get_me().username
     text = (
-        "🚀 *REFER & EARN UNLIMITED CASH* 🚀\n\n"
-        "💵 *Reward:* ₹3.0 har valid referral par!\n"
-        "🎯 *Daily Target:* 34 refers = ₹100 Instant Cash!\n\n"
-        "🔗 *Aapka Personal Invite Link:*\n"
+        "🚀 *REFER & EARN CASH* 🚀\n\n"
+        "💵 *Reward:* ₹3.0 per verified invite!\n"
+        "🎯 *Goal:* 34 refers = ₹100 instant cash!\n\n"
+        "🔗 *Invite Link:*\n"
         f"`https://t.me/{bot_user}?start={uid}`\n\n"
-        "📌 *Is link ko doston aur groups me share karein!*"
+        "📌 *Is link ko doston ko bhejein!*"
     )
     bot.reply_to(m, text, parse_mode='Markdown')
 
-@bot.message_handler(func=lambda m: m.text == "💳 WITHDRAW MONEY")
+@bot.message_handler(func=lambda m: "WITHDRAW MONEY" in m.text)
 def withdraw_prompt(m):
     u = get_user(m.from_user.id)
     if u["balance"] < 100.0:
         bot.reply_to(
             m,
             f"⚠️ *Insufficient Balance!*\n\n"
-            f"Aapka balance: `₹{u['balance']:.2f}`\n"
-            f"Withdraw lagane ke liye minimum **₹100** hona zaroori hai.\n\n"
-            f"👉 Aur `₹{100.0 - u['balance']:.2f}` kamane ke liye invite link share karein!",
+            f"Aapka current balance: `₹{u['balance']:.2f}`\n"
+            f"Withdraw ke liye kam se kam **₹100** hona zaroori hai.\n\n"
+            f"👉 Aur `₹{100.0 - u['balance']:.2f}` kamane ke liye refer karein!",
             parse_mode='Markdown'
         )
         return
@@ -258,7 +263,7 @@ def withdraw_prompt(m):
         m,
         f"✅ *Eligible for Withdrawal!*\n\n"
         f"💰 Available Balance: `₹{u['balance']:.2f}`\n\n"
-        "Payment method select karein:",
+        "Payment receive karne ka method chunein:",
         parse_mode='Markdown',
         reply_markup=withdraw_choice_kb()
     )
@@ -270,18 +275,18 @@ def handle_withdraw_choice(c):
 
     if action == "wth_cancel":
         bot.delete_message(c.message.chat.id, c.message.message_id)
-        bot.send_message(c.message.chat.id, "❌ Withdrawal request canceled.", reply_markup=main_keyboard())
+        bot.send_message(c.message.chat.id, "❌ Cancelled.", reply_markup=main_keyboard())
         return
 
     user_states[uid] = action
     bot.delete_message(c.message.chat.id, c.message.message_id)
 
     if action == "wth_upi":
-        bot.send_message(c.message.chat.id, "📱 Apni valid **UPI ID** bhejein (e.g. `user@upi`):")
+        bot.send_message(c.message.chat.id, "📱 Apni valid **UPI ID** bhejein (Jaise: `user@upi`):")
     elif action == "wth_num":
-        bot.send_message(c.message.chat.id, "📞 Apna **Paytm / PhonePe Registered Mobile Number** bhejein:")
+        bot.send_message(c.message.chat.id, "📞 Apna **Paytm / PhonePe Mobile Number** bhejein:")
     elif action == "wth_qr":
-        bot.send_message(c.message.chat.id, "🖼️ Apna Payment **QR Code Photo** send karein:")
+        bot.send_message(c.message.chat.id, "🖼️ Apna **QR Code Photo** send karein:")
 
 @bot.message_handler(content_types=['photo'], func=lambda m: user_states.get(m.from_user.id) == "wth_qr")
 def handle_qr_upload(m):
@@ -290,7 +295,7 @@ def handle_qr_upload(m):
     u = get_user(uid)
 
     if u["balance"] < 100.0:
-        bot.reply_to(m, "⚠️ Balance insufficient hai.")
+        bot.reply_to(m, "⚠️ Balance kam hai.")
         return
 
     amount = u["balance"]
@@ -323,34 +328,34 @@ def handle_qr_upload(m):
         m,
         f"✅ *Withdrawal Request Submitted!*\n\n"
         f"💵 Amount: `₹{amount:.2f}`\n"
-        "Admin verify karke payment dispatch kar denge.",
+        "Admin check karke payment dispatch kar denge.",
         parse_mode='Markdown',
         reply_markup=main_keyboard()
     )
 
-@bot.message_handler(func=lambda m: m.text == "🎁 REDEEM CODE")
+@bot.message_handler(func=lambda m: "REDEEM CODE" in m.text)
 def redeem_prompt(m):
     user_states[m.from_user.id] = "redeem_code"
     bot.reply_to(m, "🎁 Apna **Redeem Code** yahan enter karein:\n\n_(Cancel: /cancel)_")
 
-@bot.message_handler(func=lambda m: m.text == "📊 LIVE STATISTICS")
+@bot.message_handler(func=lambda m: "LIVE STATS" in m.text)
 def stats_view(m):
     total_users = len(db.get("users", {}))
     bot.reply_to(
         m,
         "📊 *BOT LIVE STATISTICS* 📊\n\n"
-        f"👥 Total Registered Users: `{total_users}`\n"
+        f"👥 Total Users: `{total_users}`\n"
         "⚡ Payout: UPI / Number / QR Code\n"
         "🔒 Cloud Sync: 24/7 Active",
         parse_mode='Markdown'
     )
 
-@bot.message_handler(func=lambda m: m.text == "📞 24/7 SUPPORT")
+@bot.message_handler(func=lambda m: "24/7 SUPPORT" in m.text)
 def support_view(m):
     bot.reply_to(
         m,
         f"📞 *OFFICIAL SUPPORT*\n\n"
-        f"Admin Contact: @{ADMIN_USER}",
+        f"Admin: @{ADMIN_USER}",
         parse_mode='Markdown'
     )
 
@@ -359,7 +364,7 @@ def cancel_cmd(m):
     user_states.pop(m.from_user.id, None)
     bot.reply_to(m, "❌ Canceled.", reply_markup=main_keyboard())
 
-# 6. User Inputs
+# 6. Inputs Processing
 @bot.message_handler(func=lambda m: m.from_user.id in user_states)
 def process_user_inputs(m):
     uid = m.from_user.id
@@ -369,7 +374,7 @@ def process_user_inputs(m):
     if st in ["wth_upi", "wth_num"]:
         pay_info = m.text.strip()
         if u["balance"] < 100.0:
-            bot.reply_to(m, "⚠️ Balance insufficient hai.")
+            bot.reply_to(m, "⚠️ Balance kam hai.")
             return
 
         amount = u["balance"]
@@ -398,7 +403,7 @@ def process_user_inputs(m):
             f"✅ *Withdrawal Request Submitted!*\n\n"
             f"💵 Amount: `₹{amount:.2f}`\n"
             f"📌 Detail: `{pay_info}`\n\n"
-            "Admin check karke payment send kar denge!",
+            "Admin verify karke payment dispatch kar denge!",
             parse_mode='Markdown',
             reply_markup=main_keyboard()
         )
@@ -414,7 +419,7 @@ def process_user_inputs(m):
 
         gdata = codes[code]
         if s in gdata["users"]:
-            bot.reply_to(m, "⚠️ Yeh code aap pehle claim kar chuke hain!", reply_markup=main_keyboard())
+            bot.reply_to(m, "⚠️ Yeh code pehle claim ho chuka hai!", reply_markup=main_keyboard())
             return
 
         if len(gdata["users"]) >= gdata["max_claims"]:
@@ -428,13 +433,13 @@ def process_user_inputs(m):
 
         bot.reply_to(
             m,
-            f"🎉 *Code Redeemed!* +₹{amt:.2f} Cash wallet me add ho gaya!\n"
+            f"🎉 *Code Redeemed!* +₹{amt:.2f} Cash added!\n"
             f"💰 New Balance: `₹{u['balance']:.2f}`",
             parse_mode='Markdown',
             reply_markup=main_keyboard()
         )
 
-# 7. Admin Callback & Commands
+# 7. Admin Commands & Approval
 @bot.callback_query_handler(func=lambda c: c.data.startswith("adm_"))
 def admin_approval_callback(c):
     if c.from_user.id != ADMIN_ID:
@@ -447,9 +452,12 @@ def admin_approval_callback(c):
 
     if action == "ok":
         bot.answer_callback_query(c.id, "Payment Approved!")
-        bot.edit_message_caption(c.message.caption + "\n\n✅ *STATUS: PAID & APPROVED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown') if c.message.caption else bot.edit_message_text(c.message.text + "\n\n✅ *STATUS: PAID & APPROVED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
         try:
-            bot.send_message(target_uid, f"🎉 *WITHDRAWAL SUCCESSFUL!*\n\nAapki `₹{amt:.2f}` ki payment dispatch kar di gayi hai!", parse_mode='Markdown')
+            bot.edit_message_caption(c.message.caption + "\n\n✅ *STATUS: PAID & APPROVED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
+        except:
+            bot.edit_message_text(c.message.text + "\n\n✅ *STATUS: PAID & APPROVED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
+        try:
+            bot.send_message(target_uid, f"🎉 *WITHDRAWAL SUCCESSFUL!*\n\nAapki `₹{amt:.2f}` ki payment dispatch ho chuki hai!", parse_mode='Markdown')
         except:
             pass
 
@@ -460,7 +468,10 @@ def admin_approval_callback(c):
             db["users"][target_s]["total_withdrawn"] -= amt
             save_db(db)
         bot.answer_callback_query(c.id, "Payment Rejected & Refunded!")
-        bot.edit_message_caption(c.message.caption + "\n\n❌ *STATUS: REJECTED & REFUNDED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown') if c.message.caption else bot.edit_message_text(c.message.text + "\n\n❌ *STATUS: REJECTED & REFUNDED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
+        try:
+            bot.edit_message_caption(c.message.caption + "\n\n❌ *STATUS: REJECTED & REFUNDED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
+        except:
+            bot.edit_message_text(c.message.text + "\n\n❌ *STATUS: REJECTED & REFUNDED*", chat_id=c.message.chat.id, message_id=c.message.message_id, parse_mode='Markdown')
         try:
             bot.send_message(target_uid, f"⚠️ *WITHDRAWAL REJECTED*\n\nAapki request reject ho gayi hai aur paise wallet me refund kar diye gaye hain.", parse_mode='Markdown')
         except:
@@ -509,7 +520,7 @@ def admin_broadcast(m):
 
     msg = parts[1]
     all_users = list(db.get("users", {}).keys())
-    bot.reply_to(m, f"📢 Broadcast shuru: {len(all_users)} users ko bhej rahe hain...")
+    bot.reply_to(m, f"📢 Broadcast shuru: {len(all_users)} users ko ja raha hai...")
 
     success, failed = 0, 0
     for u in all_users:
@@ -520,9 +531,8 @@ def admin_broadcast(m):
         except:
             failed += 1
 
-    bot.send_message(m.chat.id, f"✅ Broadcast Complete!\nSent: `{success}`\nFailed: `{failed}`", parse_mode='Markdown')
+    bot.send_message(m.chat.id, f"✅ Broadcast Done!\nSent: `{success}`\nFailed: `{failed}`", parse_mode='Markdown')
 
 if __name__ == '__main__':
     threading.Thread(target=run_web).start()
     bot.infinity_polling()
-            
